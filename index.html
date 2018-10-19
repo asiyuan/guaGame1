@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style type="text/css">
+			canvas {
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas" width="400" height="300"></canvas>
+<script type="text/javascript">
+	var log = function() {
+		console.log.apply(console, arguments)
+	}
+	
+	var imageFromPath = function(path) {
+		var img = new Image()
+		img.src = path
+		return img
+	}
+	
+	// 定义挡板对象的函数
+	var Paddle = function() {
+		var image = imageFromPath('img/paddle.png')
+		var o = {
+			image: image,
+			x: 100,
+			y: 200,
+			speed: 5,
+		}
+		o.moveLeft = function() {
+			o.x -= o.speed
+		}
+		o.moveRight = function() {
+			o.x += o.speed
+		}
+		return o
+	}
+
+	var Ball = function() {
+		var image = imageFromPath('img/ball.png')
+		var o = {
+			image: image,
+			x: 100,
+			y: 200,
+			speedX: 10,
+			speedY: 10,
+			fired: false,
+		}
+		o.fire = function() {
+			o.fired = true
+		}
+		o.move = function() {
+//			log('move')
+			if (o.fired) {
+				if (o.x < 0 || o.x > 400) {
+					o.speedX = -o.speedX
+				}
+				if (o.y < 0 || o.y > 300) {
+					o.speedY = -o.speedY
+				}
+				o.x += o.speedX
+				o.y +=o.speedY
+			}
+		}
+		return o
+	}
+
+	var GuaGame = function() {
+		g = {
+			actions: {},
+			keydowns: {},
+		}
+		var canvas = document.querySelector('#canvas')
+		var context = canvas.getContext('2d')
+		g.canvas = canvas
+		g.context =  context
+		g.drawImage = function(guaImage) {
+			g.context.drawImage(guaImage.image, guaImage.x, guaImage.y)
+		}
+		
+		// event
+		window.addEventListener('keydown', function(event){
+			g.keydowns[event.key] = true
+		})
+		window.addEventListener('keyup', function(event){
+			g.keydowns[event.key] = false
+		})
+		
+		g.registerAction = function(key, callback) {
+			g.actions[key] = callback
+		}
+		// timer
+		setInterval(function(){	
+			// events
+			var actions = Object.keys(g.actions)
+			for (var i = 0; i < actions.length; i++) {
+				var key = actions[i]
+				if (g.keydowns[key]) {
+					// 如果按键被按下， 调用注册的actions
+					g.actions[key]()
+				}
+			}
+			// update x, y
+			g.update()
+			context.clearRect(0, 0, canvas.width, canvas.height)
+//			context.drawImage(paddle.image, paddle.x, paddle.y)
+			// draw
+			g.draw()
+			
+		}, 1000/30)
+		return g
+	}
+	
+	var __main = function() {
+		var paddle = Paddle()
+		var game = GuaGame()
+		var ball = Ball()
+		
+		game.registerAction('a', function() {
+			paddle.moveLeft()
+		})
+		
+		game.registerAction('d', function() {
+			paddle.moveRight()
+		})
+		
+		game.registerAction('f', function() {
+			ball.fire()
+		})
+		
+		game.update = function() {
+			ball.move()
+		}
+		game.draw = function() {
+			game.drawImage(paddle)
+			game.drawImage(ball)
+		}
+	}
+	
+	__main()
+</script>
+	</body>
+</html>
